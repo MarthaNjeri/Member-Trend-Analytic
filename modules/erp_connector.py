@@ -29,7 +29,6 @@ def fetch_erp_data(
     # 0. LOGIN
     # ------------------------------------------------------------------
     login_url = base_url + "modules/auth/users/login.php"
-    
     login_data = {
         "companyid": companyid,
         "username": username,
@@ -44,7 +43,6 @@ def fetch_erp_data(
         print("✅ Login request sent")
     except Exception as e:
         print("Login error:", e)
-        # Continue anyway – sometimes the session still works
     
     # ------------------------------------------------------------------
     # 1. FETCH REGISTER DATA
@@ -60,20 +58,34 @@ def fetch_erp_data(
         print("Register Fetch Error:", e)
     
     # ------------------------------------------------------------------
-    # 2. DEFINE ROUTES & DATE RANGE
+    # 2. ROUTE MAPPING + DATE RANGE
     # ------------------------------------------------------------------
-    known_routes = [
-        "R001", "R002", "R003", "R004", "R005", "R006",
-        "R007", "R008", "R009", "R010", "R011", "NYATHUNA"
-    ]
+    # Map display names → ERP codes
+    route_map = {
+        "Route 1": "R001", "Route 2": "R002", "Route 3": "R003", "Route 4": "R004",
+        "Route 5": "R005", "Route 6": "R006", "Route 7": "R007", "Route 8": "R008",
+        "Route 9": "R009", "Route 10": "R010", "Route 11": "R011", "Route 12": "R012",
+        "Route 13": "R013", "Route 14": "R014", "Route 15": "R015", "Route 16": "R016",
+        "Route 17": "R017", "Route 18": "R018", "Route 19": "R019", "Route 20": "R020",
+        "Route 21": "R021", "Route 22": "R022", "Route 23": "R023", "Route 26": "R026",
+        "Route 27": "R027", "Route 28": "R028", "Route 29": "R029", "Route 30": "R030",
+        "Route 31": "R031", "Route 32": "R032", "Route 33": "R033", "Route 34": "R034",
+        "Route 35": "R035", "Route 37": "R037", "Route 38": "R038", "Route 39": "R039",
+        "Route 40": "R040", "Route 41": "R041", "Route 42": "R042", "Route 43": "R043",
+    }
     
+    known_routes = list(route_map.values())
+    
+    # Decide which routes to fetch
     if selected_route in [None, "", "Select...", "All Routes", "All"]:
         routes_to_fetch = known_routes
     else:
-        routes_to_fetch = [selected_route]
+        # Convert "Route 5" → "R005"
+        erp_route = route_map.get(selected_route, selected_route)
+        routes_to_fetch = [erp_route]
     
-    # Date range – force Jan to end of August by default
-    if selected_month and selected_month not in ["All", ""]:
+    # Date range based on selected month
+    if selected_month and selected_month not in ["All", "", None]:
         try:
             m_num = datetime.datetime.strptime(selected_month, "%B").month
             start_date = f"{year}-{m_num:02d}-01"
@@ -81,10 +93,10 @@ def fetch_erp_data(
             end_date = f"{year}-{m_num:02d}-{last_day}"
         except Exception:
             start_date = f"{year}-01-01"
-            end_date = f"{year}-08-31"
+            end_date = f"{year}-12-31"
     else:
         start_date = start_date or f"{year}-01-01"
-        end_date   = end_date   or f"{year}-08-31"
+        end_date = end_date or f"{year}-12-31"
     
     print(f"Fetching → Routes: {routes_to_fetch}")
     print(f"Period   → {start_date} to {end_date}")
@@ -112,7 +124,6 @@ def fetch_erp_data(
                 print(f"❌ {r}: HTTP {res.status_code}")
                 continue
             
-            # Soft check – only skip if clearly redirected to login
             if "location.replace" in res.text and "login.php" in res.text:
                 print(f"⚠️  {r}: Redirected to login")
                 continue
@@ -170,7 +181,7 @@ def fetch_erp_data(
         mps_df = mps_df.rename(columns=mapping)
         mps_df = mps_df.loc[:, ~mps_df.columns.duplicated()]
         
-        mps_df["Month"] = selected_month if (selected_month and selected_month != "All") else "Jan-Aug"
+        mps_df["Month"] = selected_month if (selected_month and selected_month != "All") else "Full Period"
         mps_df["Year"] = year
         
         keep = [
