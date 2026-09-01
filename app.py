@@ -6,7 +6,7 @@ from pathlib import Path
 # PAGE CONFIG
 # -------------------------------------------------
 st.set_page_config(
-    page_title="Dairy Membership & Movement Analytics Dashboard",
+    page_title="Limuru Dairy – Membership Analytics Dashboard",
     page_icon="🥛",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -42,7 +42,69 @@ div[data-testid="stMetric"] div[data-testid="stMetricValue"] {
 """, unsafe_allow_html=True)
 
 # -------------------------------------------------
-# STATUS LOGIC (clean version matching working DAX)
+# SIMPLE LOGIN SYSTEM
+# -------------------------------------------------
+VALID_USERS = {
+    "admin": "limuru2026",
+    "manager": "Analyst@",
+    "martha": "njeri2026"
+}
+
+def check_login(username: str, password: str) -> bool:
+    return username in VALID_USERS and VALID_USERS[username] == password
+
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+if "username" not in st.session_state:
+    st.session_state.username = ""
+
+# ---------- LOGIN PAGE ----------
+if not st.session_state.logged_in:
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns([1, 1.5, 1])
+    with col2:
+        st.markdown("""
+        <div style="text-align:center; margin-bottom: 30px;">
+            <h2 style="color:#1e3a5f; margin-bottom: 6px;">LIMURU DAIRY</h2>
+            <p style="color:#64748b; font-size:0.95rem;">Membership & Movement Analytics</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        with st.form("login_form"):
+            st.markdown("#### Login to continue")
+            company = st.selectbox("Company", ["Limuru Dairy "])
+            username = st.text_input("Username", placeholder="Enter username")
+            password = st.text_input("Password", type="password", placeholder="Enter password")
+            
+            login_btn = st.form_submit_button("Login", use_container_width=True, type="primary")
+            
+            if login_btn:
+                if check_login(username.strip(), password):
+                    st.session_state.logged_in = True
+                    st.session_state.username = username.strip()
+                    st.rerun()
+                else:
+                    st.error("❌ Invalid username or password")
+
+        st.markdown("""
+        <div style="text-align:center; margin-top: 30px; color:#94a3b8; font-size:0.85rem;">
+            Copyright © 2026 Martha Ngaithe. All Rights Reserved.
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.stop()   # Stop here until the user logs in
+
+# ---------- AFTER LOGIN ----------
+with st.sidebar:
+    st.markdown(f"**Logged in as:** `{st.session_state.username}`")
+    if st.button("Logout", use_container_width=True):
+        st.session_state.logged_in = False
+        st.session_state.username = ""
+        st.rerun()
+
+# -------------------------------------------------
+# STATUS LOGIC
 # -------------------------------------------------
 def add_member_status(df: pd.DataFrame) -> pd.DataFrame:
     if df.empty:
@@ -50,8 +112,6 @@ def add_member_status(df: pd.DataFrame) -> pd.DataFrame:
 
     df = df.copy()
     df.columns = [str(c).strip() for c in df.columns]
-
-    # Normalize Member No
     df["Member No"] = pd.to_numeric(df["Member No"], errors="coerce")
 
     month_map = {
@@ -76,7 +136,6 @@ def add_member_status(df: pd.DataFrame) -> pd.DataFrame:
 
     EXCEPTIONAL = {53830, 53891, 60961}
 
-    # Pre-compute members + max per period (excluding exceptional numbers)
     period_info = {}
     for (y, m), group in df.groupby(["Year", "Month Number"]):
         members = set(group["Member No"].dropna().unique())
@@ -109,10 +168,9 @@ def add_member_status(df: pd.DataFrame) -> pd.DataFrame:
             return "🔄 Resumed"
         return None
 
-    # Status for members present in the current month
     df["Status"] = df.apply(get_status, axis=1)
 
-    # Add Stopped members (present in previous month but missing in current)
+    # Add Stopped members
     stopped_rows = []
     periods = sorted(period_info.keys())
     for i in range(1, len(periods)):
@@ -153,7 +211,6 @@ def load_data():
     register = pd.read_excel(EXCEL_PATH, sheet_name="Register")
     register.columns = [str(c).strip() for c in register.columns]
 
-    # Fix DoB – this prevents the ArrowTypeError
     if "DoB" in register.columns:
         register["DoB"] = pd.to_datetime(register["DoB"], errors="coerce", dayfirst=True)
 
@@ -197,7 +254,6 @@ if page == "Overview":
     st.title("📊 Member Monthly Status Summary")
     st.caption("FY2025/2026 Active Membership Analysis")
 
-    # ========== FILTERS ==========
     st.markdown("### Filters")
 
     col_a, col_b = st.columns([4, 1])
@@ -229,7 +285,6 @@ if page == "Overview":
 
     st.markdown("---")
 
-    # ========== APPLY FILTERS ==========
     filtered = mps_df.copy()
 
     if selected_routes:
@@ -241,7 +296,6 @@ if page == "Overview":
     if selected_status != "All Status":
         filtered = filtered[filtered["Status"] == selected_status]
 
-    # Join with Register
     reg = register_df.copy()
     reg.columns = [str(c).strip() for c in reg.columns]
 
@@ -261,7 +315,6 @@ if page == "Overview":
     if selected_gender != "All Genders" and "Gender" in merged.columns:
         merged = merged[merged["Gender"].astype(str) == selected_gender]
 
-    # ========== TOP KPIs ==========
     max_mps_member = int(mps_df["Member No"].max()) if not mps_df.empty else 0
     max_reg_member = int(register_df["Member No"].max()) if not register_df.empty else 0
 
@@ -282,7 +335,6 @@ if page == "Overview":
     with k5:
         st.metric("Exceptional Members", "3")
 
-    # ========== STATUS SUMMARY CARDS ==========
     st.markdown("##### Status Breakdown")
     s1, s2, s3, s4 = st.columns(4)
     with s1:
@@ -295,8 +347,6 @@ if page == "Overview":
         st.metric("🛑 Stopped", f"{stopped:,}")
 
     st.markdown("---")
-
-    # ========== MAIN TABLE ==========
     st.subheader("Active Members – Financial Year 2025/2026")
 
     if merged.empty:
