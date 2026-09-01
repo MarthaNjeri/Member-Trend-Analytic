@@ -17,30 +17,88 @@ st.set_page_config(
 # -------------------------------------------------
 st.markdown("""
 <style>
-.stApp { background-color: #f8fafc; }
+/* ---------- Main App Background ---------- */
+.stApp {
+    background-color: #F1F5F9;          /* soft cool grey-blue */
+}
+
+/* ---------- Sidebar ---------- */
 section[data-testid="stSidebar"] {
-    background-color: #ffffff;
-    border-right: 1px solid #e2e8f0;
+    background-color: #FFFFFF;
+    border-right: 1px solid #E2E8F0;
 }
+
+/* ---------- Metric Cards ---------- */
 div[data-testid="stMetric"] {
-    background: white;
+    background: #FFFFFF;
     padding: 18px 20px;
-    border-radius: 12px;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    border-radius: 14px;
+    border: 1px solid #E2E8F0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    transition: transform 0.15s ease;
 }
+div[data-testid="stMetric"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+}
+
+/* Metric labels */
 div[data-testid="stMetric"] label {
-    color: #64748b !important;
+    color: #64748B !important;
     font-size: 0.82rem !important;
+    font-weight: 500 !important;
 }
+
+/* Metric values */
 div[data-testid="stMetric"] div[data-testid="stMetricValue"] {
     font-size: 1.55rem !important;
     font-weight: 700 !important;
-    color: #0f172a !important;
+    color: #0F172A !important;
+}
+
+/* ---------- Headings ---------- */
+h1, h2, h3 {
+    color: #1E3A5F !important;
+}
+
+/* ---------- Buttons ---------- */
+.stButton > button {
+    border-radius: 10px;
+    font-weight: 500;
+}
+
+/* Primary buttons */
+.stButton > button[kind="primary"] {
+    background-color: #1E3A5F;
+    border-color: #1E3A5F;
+}
+.stButton > button[kind="primary"]:hover {
+    background-color: #16304F;
+    border-color: #16304F;
+}
+
+/* ---------- Select boxes & inputs ---------- */
+.stSelectbox, .stMultiSelect, .stTextInput {
+    border-radius: 10px;
+}
+
+/* ---------- Dataframe ---------- */
+.stDataFrame {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #E2E8F0;
+}
+
+/* ---------- Login form polish ---------- */
+div[data-testid="stForm"] {
+    background: white;
+    padding: 28px 24px;
+    border-radius: 16px;
+    border: 1px solid #E2E8F0;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.06);
 }
 </style>
 """, unsafe_allow_html=True)
-
 # -------------------------------------------------
 # SIMPLE LOGIN SYSTEM
 # -------------------------------------------------
@@ -336,15 +394,56 @@ if page == "Overview":
         st.metric("Exceptional Members", "3")
 
     st.markdown("##### Status Breakdown")
+
     s1, s2, s3, s4 = st.columns(4)
+
     with s1:
-        st.metric("🆕 Newly Joined", f"{newly:,}")
+        st.markdown(f"""
+        <div style="background: linear-gradient(135deg, #ECFDF5, #D1FAE5);
+                    padding: 20px;
+                    border-radius: 14px;
+                    border-left: 6px solid #059669;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+            <div style="color:#065F46; font-size:0.85rem; font-weight:600;">🆕 Newly Joined</div>
+            <div style="color:#064E3B; font-size:1.8rem; font-weight:700; margin-top:6px;">{newly:,}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
     with s2:
-        st.metric("🔄 Continuing", f"{continuing:,}")
+        st.markdown(f"""
+        <div style="background: linear-gradient(135deg, #EFF6FF, #DBEAFE);
+                    padding: 20px;
+                    border-radius: 14px;
+                    border-left: 6px solid #2563EB;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+            <div style="color:#1E40AF; font-size:0.85rem; font-weight:600;">🔄 Continuing</div>
+            <div style="color:#1E3A8A; font-size:1.8rem; font-weight:700; margin-top:6px;">{continuing:,}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
     with s3:
-        st.metric("🔄 Resumed", f"{resuming:,}")
+        st.markdown(f"""
+        <div style="background: linear-gradient(135deg, #FFFBEB, #FEF3C7);
+                    padding: 20px;
+                    border-radius: 14px;
+                    border-left: 6px solid #D97706;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+            <div style="color:#92400E; font-size:0.85rem; font-weight:600;">🔄 Resumed</div>
+            <div style="color:#78350F; font-size:1.8rem; font-weight:700; margin-top:6px;">{resuming:,}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
     with s4:
-        st.metric("🛑 Stopped", f"{stopped:,}")
+        st.markdown(f"""
+        <div style="background: linear-gradient(135deg, #FEF2F2, #FEE2E2);
+                    padding: 20px;
+                    border-radius: 14px;
+                    border-left: 6px solid #DC2626;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+            <div style="color:#991B1B; font-size:0.85rem; font-weight:600;">🛑 Stopped</div>
+            <div style="color:#7F1D1D; font-size:1.8rem; font-weight:700; margin-top:6px;">{stopped:,}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
     st.markdown("---")
     st.subheader("Active Members – Financial Year 2025/2026")
@@ -371,7 +470,6 @@ if page == "Overview":
 
         total_vol = merged["Total"].sum() if "Total" in merged.columns else 0
         st.markdown(f"### **Total Volume: {total_vol:,.2f} Ltrs**")
-
 # -------------------------------------------------
 # MPS PAGE
 # -------------------------------------------------
